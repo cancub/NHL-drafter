@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Scanner;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -27,12 +26,15 @@ public class DraftAdvisor {
 			new HashMap<String, HashMap<String, Float>>();
     
     private ArrayList<String> goalieAttributes = new ArrayList<String>();
-    private HashMap<String, Float> goalieAttributesUsed = new HashMap<String, Float>();
+    private HashMap<String, Float> idealGoalieStats = new HashMap<String, Float>();
 
     private ArrayList<String> skaterAttributes = new ArrayList<String>();
-    private HashMap<String, Float> skaterAttributesUsed = new HashMap<String, Float>();
+    private HashMap<String, Float> idealSkaterStats = new HashMap<String, Float>();
     
     private ArrayList<String> playersTaken = new ArrayList<String>();
+    
+    int numberKeepers;
+    int numberGoalieKeepers;
 	
 	
 	public ArrayList<String> getColumnTitles(String tableName){
@@ -280,10 +282,17 @@ public class DraftAdvisor {
         return results;
 	}
 	
-	public ArrayList<String> getStats(String tableName, String playerName, Set<String> statNames){
+	public ArrayList<String> getStats(String tableName, String playerName){
+		String command = new String();
 		
-		String command = "SELECT " + String.join(", ", statNames) + " FROM " + tableName + 
-				" WHERE name = \'" + playerName + "\'";
+		if (tableName.equals("skaters")){
+			command = "SELECT " + String.join(", ", idealSkaterStats.keySet()) + 
+					" FROM " + tableName + " WHERE name = \'" + playerName + "\'";
+		} else {
+			command = "SELECT " + String.join(", ", idealGoalieStats.keySet()) + 
+					" FROM " + tableName + " WHERE name = \'" + playerName + "\'";
+		}
+		
 		System.out.println(command);
 		
 		Connection con = null;
@@ -403,7 +412,7 @@ public class DraftAdvisor {
         return results;
 	}
 	
-	public static void collectAvailableKeepers() {
+	public void collectAvailableKeepers() {
 		
 		String keeperName = new String();
 		
@@ -415,9 +424,9 @@ public class DraftAdvisor {
     	// get the keeper info
     	
     	System.out.println("Enter the number of keepers:");
-    	int numberKeepers = Integer.parseInt(user_input.next());
+    	numberKeepers = Integer.parseInt(user_input.next());
     	System.out.println("Enter the maximum number of goalie keepers:");
-    	int numberGoalieKeepers = Integer.parseInt(user_input.next());
+    	numberGoalieKeepers = Integer.parseInt(user_input.next());
     	
     	// find the available players to choose keepers from
     	// get part of name and search for this player in the DB
@@ -447,7 +456,7 @@ public class DraftAdvisor {
         		// check if the player is in the goalie list if it wasn't found in
         		// the skaters list
         		if (keeperSelection.equals("NA")) {
-        			resultsList = myAdvisor.getSimilarGoalies(keeperName);
+        			resultsList = getSimilarGoalies(keeperName);
         			
             		for (String keeperOption: resultsList){
             			System.out.println(keeperOption + "? (y/n)");
@@ -470,31 +479,29 @@ public class DraftAdvisor {
         		if (keeperType.equals("skater")) {
         			// build a string containing all the desired stats for skaters
         			
-        			resultsList = myAdvisor.getStats("skaters",keeperSelection,
-        					skaterAttributesUsed.keySet());
+        			resultsList = getStats("skaters",keeperSelection);
         			
         			// the key for the hashmap is the player's name
         		
         			HashMap<String, Float> newSkater = new HashMap<String, Float>();
         			int i = 0;
-        			for (String item:skaterAttributesUsed.keySet()){
+        			for (String item:idealSkaterStats.keySet()){
         				newSkater.put(item, Float.valueOf(resultsList.get(i)));
         				i++;
         			}
-        			myAdvisor.availableSkaterKeepers.put(keeperSelection,newSkater);
+        			availableSkaterKeepers.put(keeperSelection,newSkater);
         		} else {
-        			resultsList = myAdvisor.getStats("goalies",keeperSelection,
-        					goalieAttributesUsed.keySet());
+        			resultsList = getStats("goalies",keeperSelection);
         			
         			// the key for the hashmap is the player's name
         		
         			HashMap<String, Float> newGoalie = new HashMap<String, Float>();
         			int i = 0;
-        			for (String item:goalieAttributesUsed.keySet()){
+        			for (String item:idealGoalieStats.keySet()){
         				newGoalie.put(item, Float.valueOf(resultsList.get(i)));
         				i++;
         			}
-        			myAdvisor.availableGoalieKeepers.put(keeperSelection,newGoalie);
+        			availableGoalieKeepers.put(keeperSelection,newGoalie);
         		}
         	}
         	System.out.println("Finished adding " + keeperSelection + 
@@ -503,6 +510,63 @@ public class DraftAdvisor {
     	
     	user_input.close();
     	// Find the skaters and goalies that should be kept from the given list
+	}
+	
+	public void selectKeepers() {
+		ArrayList<String> playerStats = new ArrayList<String>();
+		HashMap<String, Float> aggregateStats = new HashMap<String, Float>();
+		
+		// initialize the aggregates for player stats
+		for (String stat: ){
+			
+		}
+		
+		// initialize the aggregates for player stats
+		for (String stat: ){
+			
+		}
+		
+		String bestPlayer = new String();
+		float minimumDistance = 1000000;
+		
+		
+		while(chosenGoalies.size() + chosenSkaters.size() < numberKeepers) {
+			float testDistance = 0;
+			float aggregateStat = 0;
+			
+			// find the sum for each stat on the team thus far
+			
+			
+			
+			for (String playerName: availableSkaterKeepers.keySet()){
+				// get a player whose stats should be referenced
+				
+				// find the distance between the aggregate of this stat for ideal
+				// team and the aggregate of this stat for my team with this new player
+				// (include stats even for the other type of player, i.e. goalie stats
+				// for a skater)
+				
+				// square the distance value and add it to the total
+				
+				// divide the sum of the squares by the total number of stats being checked
+				
+				// take the square root of the sum
+				
+				// compare with the previously observed minimum, taking this player
+				// as the new minimum if it is lower
+			}
+			
+			// repeat the above steps with goalies if the maximum number of goalies has
+			// not been selected
+			
+			// suggest the final minimum and see if the user is ok with it
+			
+			// if they are ok, add the player to the list of chosen skaters/goalies
+			// as well as the list of players that are taken
+			
+			// if they are not okay with this player, remove from the pool of players
+			// and continue to find the next best player
+		}
 	}
 
 	public static void main(String[] args) {
@@ -554,7 +618,7 @@ public class DraftAdvisor {
             		break;
             	} else if (!myAdvisor.goalieAttributes.contains(attr)) {
             		System.out.println("Sorry, " + attr + " is not an available stat for goalies");
-            	} else if (myAdvisor.goalieAttributesUsed.keySet().contains(attr)) {
+            	} else if (myAdvisor.idealGoalieStats.keySet().contains(attr)) {
             		System.out.println(attr + " has already been added");
             	} else {
             		if (attr.equals("GAA")) {
@@ -562,7 +626,7 @@ public class DraftAdvisor {
             		} else {
             			resultFloat = myAdvisor.getMax("goalies", attr);
             		}
-            		myAdvisor.goalieAttributesUsed.put(attr, resultFloat);
+            		myAdvisor.idealGoalieStats.put(attr, resultFloat);
 //            		System.out.println(rs.getString(1));
             		System.out.println(attr + " added to selected stat categories");
             	}
@@ -572,8 +636,9 @@ public class DraftAdvisor {
             
             System.out.println("Selected goalie stats and best values:");
             
-            for (String currentKey : myAdvisor.goalieAttributesUsed.keySet()) {
-            	System.out.println(currentKey + ": " + myAdvisor.goalieAttributesUsed.get(currentKey));
+            for (String currentKey : myAdvisor.idealGoalieStats.keySet()) {
+            	System.out.println(currentKey + ": " + 
+            			myAdvisor.idealGoalieStats.get(currentKey));
             }
             
             System.out.println();
@@ -599,7 +664,7 @@ public class DraftAdvisor {
             				" is not an available stat for skaters):");
             	} else {
             		resultFloat = myAdvisor.getMax("skaters", attr);
-            		myAdvisor.skaterAttributesUsed.put(attr, resultFloat);
+            		myAdvisor.idealSkaterStats.put(attr, resultFloat);
             		System.out.println(attr + " added to selected stat categories");
             	}
             }
@@ -608,8 +673,8 @@ public class DraftAdvisor {
             
             System.out.println("Selected skater stats and best values:");
             
-            for (String currentKey : myAdvisor.skaterAttributesUsed.keySet()) {
-            	System.out.println(currentKey + ": " + myAdvisor.skaterAttributesUsed.get(currentKey));
+            for (String currentKey : myAdvisor.idealSkaterStats.keySet()) {
+            	System.out.println(currentKey + ": " + myAdvisor.idealSkaterStats.get(currentKey));
             }
             
             System.out.println();   
@@ -631,15 +696,16 @@ public class DraftAdvisor {
             
             // create a team comprised of each of these max attributes, pay
             // attention to average version addition
-            for (String currentKey: myAdvisor.skaterAttributesUsed.keySet()){
-            	myAdvisor.skaterAttributesUsed.put(currentKey, 
-            			myAdvisor.skaterAttributesUsed.get(currentKey) * (overallSlots - goalieSlots));
+            for (String currentKey: myAdvisor.idealSkaterStats.keySet()){
+            	myAdvisor.idealSkaterStats.put(currentKey, 
+            			myAdvisor.idealSkaterStats.get(currentKey) * 
+            			(overallSlots - goalieSlots));
             }
             
-            for (String currentKey: myAdvisor.goalieAttributesUsed.keySet()) {
+            for (String currentKey: myAdvisor.idealGoalieStats.keySet()) {
             	if (Arrays.asList("GP","GS","W","SO").contains(currentKey)) {
-            		myAdvisor.goalieAttributesUsed.put(currentKey, 
-            				myAdvisor.goalieAttributesUsed.get(currentKey) * goalieSlots);
+            		myAdvisor.idealGoalieStats.put(currentKey, 
+            				myAdvisor.idealGoalieStats.get(currentKey) * goalieSlots);
             	}
             }
             
