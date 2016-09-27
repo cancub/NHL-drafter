@@ -57,7 +57,7 @@ public class DraftAdvisor {
     	String command = "SELECT COLUMN_NAME FROM INFORMATION_"+ 
     			"SCHEMA.COLUMNS WHERE TABLE_NAME = \'" + tableName + "\'";
     	
-    	System.out.println(command);
+//    	System.out.println(command);
         
         try {
             
@@ -118,7 +118,7 @@ public class DraftAdvisor {
     	String command = "SELECT MAX("+ columnName +
 				") AS " + columnName + " FROM " + tableName;
     	
-    	System.out.println(command);
+//    	System.out.println(command);
         
         try {
             
@@ -179,7 +179,7 @@ public class DraftAdvisor {
     	String command = "SELECT MIN("+ columnName +
 				") AS " + columnName + " FROM " + tableName;
     	
-    	System.out.println(command);
+//    	System.out.println(command);
         
         try {
             
@@ -309,7 +309,7 @@ public class DraftAdvisor {
 					" FROM " + tableName + " WHERE name = \'" + playerName + "\'";
 		}
 		
-		System.out.println(command);
+//		System.out.println(command);
 		
 		Connection con = null;
 		Statement pst = null;
@@ -547,7 +547,7 @@ public class DraftAdvisor {
 		String command = new String("SELECT GP FROM " + tableName + " WHERE name = \'" + 
 				playerName + "\'");
 		
-		System.out.println(command);
+//		System.out.println(command);
 		
 		Connection con = null;
 		Statement pst = null;
@@ -599,6 +599,10 @@ public class DraftAdvisor {
                 Logger lgr = Logger.getLogger(DraftAdvisor.class.getName());
                 lgr.log(Level.WARNING, ex.getMessage(), ex);
             }
+        }
+        
+        if (result < 0) {
+        	result = 0;
         }
         
         return result;
@@ -910,8 +914,6 @@ public class DraftAdvisor {
 		
 		String command = new String();
 		
-		HashMap<String, Double> tempPlayer = new HashMap<String, Double>();
-		
 		if (tableName.equals("skaters")){
 			command = "SELECT name, " + String.join(", ", maxSkaterStats.keySet()) + 
 					" FROM " + tableName;
@@ -920,7 +922,7 @@ public class DraftAdvisor {
 					" FROM " + tableName;
 		}
 		
-		System.out.println(command);
+//		System.out.println(command);
 		
 		Connection con = null;
 		Statement pst = null;
@@ -944,6 +946,7 @@ public class DraftAdvisor {
             if (tableName.equals("skaters")) {
 	            while (rs.next()){
 	            	i = 2;
+	            	HashMap<String, Double> tempPlayer = new HashMap<String, Double>();
 	            	for (String stat: maxSkaterStats.keySet()) {
 	            		tempPlayer.put(stat, Double.valueOf(rs.getString(i)));
 	            		i++;
@@ -953,6 +956,7 @@ public class DraftAdvisor {
             } else {
             	while (rs.next()){
             		i = 2;
+            		HashMap<String, Double> tempPlayer = new HashMap<String, Double>();
 	            	for (String stat: maxGoalieStats.keySet()) {
 	            		tempPlayer.put(stat, Double.valueOf(rs.getString(i)));
 	            		i++;
@@ -1082,12 +1086,15 @@ public class DraftAdvisor {
 			for (String playerName: allSkaters.keySet()){
 				// get a player whose stats should be referenced
 				
-				gamesPlayed = getGP("skaters", playerName);
-				
 				if (chosenSkaters.keySet().contains(playerName) || 
 						avoidedPlayers.contains(playerName)) {
 					continue;
 				}
+				
+				gamesPlayed = getGP("skaters", playerName);
+				
+				
+				
 				
 				for (String stat: aggregateStats.keySet()) {
 					// figure out how the skater's stats affect the overall team average
@@ -1113,6 +1120,8 @@ public class DraftAdvisor {
 							aggregateStat /= chosenGoalies.size();
 						}
 					}
+					
+					System.out.format("%.3f ", percentOfBest(stat, aggregateStat));
 				
 					// square the percent value and add it to the total
 					testPercent += Math.pow(percentOfBest(stat, aggregateStat),2);
@@ -1123,6 +1132,9 @@ public class DraftAdvisor {
 				
 				// take the square root of the sum
 				testPercent = Math.sqrt(testPercent);
+				
+				System.out.format("= %.2f  ",testPercent);
+				System.out.println(playerName);
 				
 				// compare with the previously observed minimum, taking this player
 				// as the new minimum if it is lower
@@ -1161,6 +1173,8 @@ public class DraftAdvisor {
 								aggregateStat /=  chosenSkaters.size();
 							}
 						}
+						
+						System.out.format("%.3f ", percentOfBest(stat, aggregateStat));
 					
 						testPercent += Math.pow(percentOfBest(stat, aggregateStat),2);
 					}
@@ -1168,6 +1182,9 @@ public class DraftAdvisor {
 					testPercent /= aggregateStats.size();
 					
 					testPercent = Math.sqrt(testPercent);
+					
+					System.out.format("= %.3f ",testPercent);
+					System.out.println(playerName);
 					
 					if (testPercent > maximumPercent) {
 						bestPlayerType = "goalie";
@@ -1298,7 +1315,8 @@ public class DraftAdvisor {
             
             if (user_input.next().equals("y")){
             	System.out.println("Enter the filename:");
-            	myAdvisor.getGoalieStatsFromFile(user_input.next());
+//            	myAdvisor.getGoalieStatsFromFile(user_input.next());
+            	myAdvisor.getGoalieStatsFromFile("goalie_stats.txt");
             } else {
             
 	            System.out.println("Select the goalie stats your league uses (type \"done\" when finished)");
@@ -1344,7 +1362,8 @@ public class DraftAdvisor {
             
             if (user_input.next().equals("y")){
             	System.out.println("Enter the filename:");
-            	myAdvisor.getSkaterStatsFromFile(user_input.next());
+//            	myAdvisor.getSkaterStatsFromFile(user_input.next());
+            	myAdvisor.getSkaterStatsFromFile("skater_stats.txt");
             } else {
             
             	System.out.printf("Available skater stats:");
